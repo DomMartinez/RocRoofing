@@ -11,7 +11,7 @@ releases:
       - image:
           pullSecret: "github-registry"
           pullPolicy: "IfNotPresent"
-          repository: "ghcr.io/DomMartinez/roc-roofing/rocroofing"
+          repository: "ghcr.io/dommartinez/roc-roofing/rocroofing"
           tag: "{{ .Values.version }}"
       - ingress:
           enabled: true
