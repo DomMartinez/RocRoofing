@@ -1,0 +1,54 @@
+configMap:
+  env: {}
+
+deployment:
+  env: null
+  revisionHistoryLimit: 3
+  securityContext: null
+  replicaCount: 2
+  rollingUpdate:
+    maxSurge: null
+    maxUnavailable: 50%
+  resources: {}
+  livenessProbe:
+    httpGet:
+      path: /metrics
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 15
+  readinessProbe:
+    httpGet:
+      path: /metrics
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 15
+
+prometheus:
+  path: "/metrics"
+  port: "8080"
+
+pod:
+  annotations: {}
+
+image:
+  pullSecret: null
+  pullPolicy: "IfNotPresent"
+  repository: ""
+  tag: "latest"
+
+irsa: null
+
+ingress:
+  enabled: false
+  tls: true
+  hostname: ""
+  traefikSelector: "traefik"
+  annotations: {}
+
+service:
+  enabled: true
+  type: ClusterIP
+  annotations: {}
+  http:
+    port: 8080
+  https: null

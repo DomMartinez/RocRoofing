@@ -1,0 +1,45 @@
+name: "▶ Deploy Release"
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'rocroofing-*'
+
+env:
+  AWS_DEFAULT_REGION: us-west-2
+  KUBECONFIG: ${{ github.workspace }}/infrastructure/.kube/config
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.event_name }}-rocroofing-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: "Deploy Release"
+    runs-on: ubuntu-20.04
+    steps:
+      -
+        name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Compute Version
+        id: version
+        run: echo "::set-output name=version::$(cat roc-roofing/VERSION.txt)"
+      - name: Install aws-iam-authenticator
+        run: brew install aws-iam-authenticator
+      - name: Assume necessary role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.KUBE_ROLE_AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.KUBE_ROLE_AWS_SECRET}}
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::198847000385:role/kube_admin
+      - name: Setup helmfile
+        uses: mamezou-tech/setup-helmfile@v0.8.0
+      - name: Deploy HELMFILE
+        run: |
+          kubectl config use-context cluster-us-west-2
+          helmfile --file infrastructure/kubernetes/clusters/cluster-us-west-2.yaml \
+            --state-values-set version="${{ steps.version.outputs.version }}" deps
+          helmfile --file infrastructure/kubernetes/clusters/cluster-us-west-2.yaml \
+            --state-values-set version="${{ steps.version.outputs.version }}" sync
