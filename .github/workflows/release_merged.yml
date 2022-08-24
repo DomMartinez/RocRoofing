@@ -62,7 +62,7 @@ jobs:
       - name: Deploy HELMFILE
         run: |
           kubectl config use-context cluster-us-west-2
-          helmfile --file infrastructure/kubernetes/clusters/cluster-us-west-2.yaml \
+          helmfile --file infrastructure/kubernetes/cluster-us-west-2.yaml \
             --state-values-set version="${{ steps.version.outputs.version }}" deps
-          helmfile --file infrastructure/kubernetes/clusters/cluster-us-west-2.yaml \
+          helmfile --file infrastructure/kubernetes/cluster-us-west-2.yaml \
             --state-values-set version="${{ steps.version.outputs.version }}" apply
