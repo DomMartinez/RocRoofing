@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   release:
-    name: "Construct Github Release"
+    name: "Draft Github Release"
     runs-on: ubuntu-20.04
     steps:
       -
@@ -38,7 +38,7 @@ jobs:
           name: "roc-roofing ${{ steps.version.outputs.version }}"
           tag: "rocroofing-${{ steps.version.outputs.version }}"
           version: "rocroofing-${{ steps.version.outputs.version }}"
-          publish: true
+          publish: false
           commitish: refs/heads/main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
