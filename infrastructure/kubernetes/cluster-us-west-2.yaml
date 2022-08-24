@@ -1,0 +1,40 @@
+releases:
+  - name: rocroofing-webapp
+    chart: ./charts/rocroofing-webapp
+    namespace: ocdhomes
+    values:
+      - configMap:
+          env:
+            APP_VERSION: "{{ .Values.version }}"
+            PORT: "8080"
+            TZ: UTC
+      - image:
+          pullSecret: "github-registry"
+          pullPolicy: "IfNotPresent"
+          repository: "ghcr.io/DomMartinez/roc-roofing/rocroofing"
+          tag: "{{ .Values.version }}"
+      - ingress:
+          enabled: true
+          hostname: "rocroofingfl.com"
+          annotations:
+            acme.cert-manager.io/http01-edit-in-place: "true"
+            cert-manager.io/cluster-issuer: acme-letsencrypt-staging
+      - deployment:
+          env:
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          replicaCount: 2
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15

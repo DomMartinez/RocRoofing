@@ -1,0 +1,25 @@
+name: "⚙ Pull Request Labels"
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  pr-labeler:
+    name: Pull Request Labels
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Branch-based Labels
+        uses: TimonVS/pr-labeler-action@v3
+        with:
+          configuration-path: .github/resources/pr-labeler_branches.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Path-based Labels
+        uses: actions/labeler@v4
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/resources/pr-labeler_paths.yml
