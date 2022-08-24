@@ -15,10 +15,10 @@ releases:
           tag: "{{ .Values.version }}"
       - ingress:
           enabled: true
-          hostname: "rocroofingfl.com"
+          hostname: "sandbox.rocroofingfl.com"
           annotations:
             acme.cert-manager.io/http01-edit-in-place: "true"
-            cert-manager.io/cluster-issuer: acme-letsencrypt-staging
+            cert-manager.io/cluster-issuer: acme-letsencrypt
       - deployment:
           env:
             - name: DD_AGENT_HOST
