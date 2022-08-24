@@ -65,4 +65,4 @@ jobs:
           helmfile --file infrastructure/kubernetes/clusters/cluster-us-west-2.yaml \
             --state-values-set version="${{ steps.version.outputs.version }}" deps
           helmfile --file infrastructure/kubernetes/clusters/cluster-us-west-2.yaml \
-            --state-values-set version="${{ steps.version.outputs.version }}" sync
+            --state-values-set version="${{ steps.version.outputs.version }}" apply
