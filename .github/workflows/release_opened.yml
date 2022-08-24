@@ -1,0 +1,91 @@
+name: "🤞 Create Release"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'roc-roofing/VERSION.txt'
+
+env:
+  AWS_DEFAULT_REGION: us-west-2
+  KUBECONFIG: ${{ github.workspace }}/infrastructure/.kube/config
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.event_name }}-rocroofing-build
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: "Construct Github Release"
+    runs-on: ubuntu-20.04
+    steps:
+      -
+        name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Compute Version
+        id: version
+        run: echo "::set-output name=version::$(cat roc-roofing/VERSION.txt)"
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter.yml
+          name: "roc-roofing ${{ steps.version.outputs.version }}"
+          tag: "rocroofing-${{ steps.version.outputs.version }}"
+          version: "rocroofing-${{ steps.version.outputs.version }}"
+          publish: true
+          commitish: refs/heads/main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: "Package Docker Container"
+    runs-on: ubuntu-20.04
+    steps:
+      -
+        name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Compute Version
+        id: version
+        run: echo "::set-output name=version::$(cat roc-roofing/VERSION.txt)"
+      # This is the a separate action that sets up buildx runner
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      # So now you can use Actions' own caching!
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-roc-roofing
+          restore-keys: |
+            ${{ runner.os }}-buildx-roc-roofing-
+      - name: Login to Github Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # And make it available for the builds
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ${{ github.workspace }}/roc-roofing
+          file: ${{ github.workspace }}/roc-roofing/Dockerfile
+          push: true
+          tags: "ghcr.io/DomMartinez/roc-roofing/rocroofing:${{ steps.version.outputs.version }}"
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+        # This ugly bit is necessary if you don't want your cache to grow forever
+        # till it hits GitHub's limit of 5GB.
+        # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
