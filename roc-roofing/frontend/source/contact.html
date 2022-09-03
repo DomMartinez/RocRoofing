@@ -11,7 +11,7 @@
         <h3 class="section-sub-title"></h3>
       </div>
     </div>
-    <!--/ Title row end -->
+    
 
     <div class="row">
       <div class="col-md-4">
@@ -24,7 +24,7 @@
             <p> 620 S Volusia Ave, Orange City FL</p>
           </div>
         </div>
-      </div><!-- Col 1 end -->
+      </div>
 
       <div class="col-md-4">
         <div class="ts-service-box-bg text-center h-100">
@@ -33,10 +33,10 @@
           </span>
           <div class="ts-service-box-content">
             <h4>Email Us</h4>
-            <p>Chuck@RocRoofingFL.com</p>
+            <p>   </p>
           </div>
         </div>
-      </div><!-- Col 2 end -->
+      </div>
 
       <div class="col-md-4">
         <div class="ts-service-box-bg text-center h-100">
@@ -48,13 +48,49 @@
             <p>386-960-7004</p>
           </div>
         </div>
-      </div><!-- Col 3 end -->
+      </div>
 
-    </div><!-- 1st row end -->
+    </div>
+    <div class="gap-40"></div>
 
+    <div class="row">
+      <div class="col-md-12">
+        <form id="contact-form" action="#" method="post" role="form">
+          <div class="error-container"></div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Name</label>
+                <input class="form-control form-control-name" name="name" id="name" placeholder="" type="text" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Email</label>
+                <input class="form-control form-control-email" name="email" id="email" placeholder="" type="email"
+                  required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Subject</label>
+                <input class="form-control form-control-subject" name="subject" id="subject" placeholder="" required>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea class="form-control form-control-message" name="message" id="message" placeholder="" rows="10"
+              required></textarea>
+          </div>
+          <div class="text-right"><br>
+            <button class="btn btn-primary solid blank" type="submit">Send Message</button>
+          </div>
+        </form>
+      </div>
         
-    </div><!-- Content row -->
-  </div><!-- Conatiner end -->
-</section><!-- Main container end -->
+    </div>
+  </div>
+</section>
 
 @@include('footer.htm')
