@@ -1,4 +1,4 @@
-name: "🤞 Create Release"
+name: "▶ Package and Deploy Sandbox"
 
 on:
   workflow_dispatch:
@@ -8,16 +8,21 @@ on:
       - master
     paths:
       - 'roc-roofing/VERSION.txt'
+    types:
+      - opened
+      - reopened
+      - synchronized
 
 env:
   AWS_DEFAULT_REGION: us-west-2
   KUBECONFIG: ${{ github.workspace }}/infrastructure/.kube/config
 
 concurrency:
-  group: ${{ github.ref }}-${{ github.event_name }}-rocroofing-build
+  group: ${{ github.ref }}-${{ github.event_name }}-rocroofing-sandbox
   cancel-in-progress: true
 
 jobs:
+  # TODO: Check if release already exists (version file not properly changed?)
   release:
     name: "Draft Github Release"
     runs-on: ubuntu-20.04
@@ -49,6 +54,9 @@ jobs:
       - name: Compute Version
         id: version
         run: echo "::set-output name=version::$(cat roc-roofing/VERSION.txt)"
+      - name: Compute Docker Tag
+        id: dockerTag
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       # This is the a separate action that sets up buildx runner
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -73,7 +81,7 @@ jobs:
           context: ${{ github.workspace }}/roc-roofing
           file: ${{ github.workspace }}/roc-roofing/Dockerfile
           push: true
-          tags: "ghcr.io/dommartinez/roc-roofing/rocroofing:${{ steps.version.outputs.version }}"
+          tags: "ghcr.io/dommartinez/roc-roofing/rocroofing:${{ steps.dockerTag.outputs.sha_short }},ghcr.io/dommartinez/roc-roofing/rocroofing:${{ steps.version.outputs.version }}"
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
         # This ugly bit is necessary if you don't want your cache to grow forever
@@ -81,7 +89,44 @@ jobs:
         # Temp fix
         # https://github.com/docker/build-push-action/issues/252
         # https://github.com/moby/buildkit/issues/1896
-      - name: Move cache
+
+  deploy:
+    name: "Deploy Sandbox"
+    runs-on: ubuntu-20.04
+    needs: [publish]
+    steps:
+      -
+        name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Compute Docker Tag
+        id: dockerTag
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: Install aws-iam-authenticator
+        run: brew install aws-iam-authenticator
+      - name: Assume necessary role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.KUBE_ROLE_AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.KUBE_ROLE_AWS_SECRET}}
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::198847000385:role/kube_admin
+          role-duration-seconds: 1200
+      - name: Setup helmfile
+        uses: mamezou-tech/setup-helmfile@v0.8.0
+      - name: Deploy HELMFILE
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          kubectl config use-context cluster-us-west-2
+          helmfile --file infrastructure/kubernetes/cluster-us-west-2.yaml \
+            --state-values-set version="${{ steps.dockerTag.outputs.sha_short }}" \
+            --state-values-set releaseName="rocroofing-sandbox" \
+            --state-values-set namespace="ocdhomes" \
+            --state-values-set irsa="rocroofing-prod-irsa" \
+            --state-values-set hostname="sandbox.rocroofingfl.com" \
+            deps
+          helmfile --file infrastructure/kubernetes/cluster-us-west-2.yaml \
+            --state-values-set version="${{ steps.dockerTag.outputs.sha_short }}" \
+            --state-values-set releaseName="rocroofing-sandbox" \
+            --state-values-set namespace="ocdhomes" \
+            --state-values-set irsa="rocroofing-prod-irsa" \
+            --state-values-set hostname="sandbox.rocroofingfl.com" \
+            apply

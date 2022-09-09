@@ -1,8 +1,10 @@
 releases:
-  - name: rocroofing-webapp
+  - name: {{ .Values.releaseName }}
     chart: ./charts/rocroofing-webapp
-    namespace: ocdhomes
+    namespace: {{ .Values.namespace }}
     values:
+      - irsa:
+          name: {{ .Values.irsa }}
       - configMap:
           env:
             APP_VERSION: "{{ .Values.version }}"
@@ -15,7 +17,7 @@ releases:
           tag: "{{ .Values.version }}"
       - ingress:
           enabled: true
-          hostname: "sandbox.rocroofingfl.com"
+          hostname: {{ .Values.hostname | quote }}
           annotations:
             acme.cert-manager.io/http01-edit-in-place: "true"
             cert-manager.io/cluster-issuer: acme-letsencrypt

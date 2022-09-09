@@ -4,6 +4,7 @@ import path from 'path';
 import tracer from './tracer';
 import Environment from './Environment';
 import Logger from './logger';
+import HandleContactUsSubmission from './Controller/ContactUsController';
 
 async function run(): Promise<void> {
     Logger.info(`Starting express server`);
@@ -40,6 +41,9 @@ async function run(): Promise<void> {
       }
       next();
     });
+
+
+    app.post('/api/contact-form', HandleContactUsSubmission);
 
     /*
     UI and Static Endpoints

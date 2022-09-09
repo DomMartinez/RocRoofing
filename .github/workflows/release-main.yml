@@ -1,4 +1,4 @@
-name: "▶ Deploy Release"
+name: "🎁 Deploy Production"
 
 on:
   workflow_dispatch:
@@ -11,12 +11,12 @@ env:
   KUBECONFIG: ${{ github.workspace }}/infrastructure/.kube/config
 
 concurrency:
-  group: ${{ github.ref }}-${{ github.event_name }}-rocroofing-deploy
+  group: ${{ github.ref }}-${{ github.event_name }}-rocroofing-prod
   cancel-in-progress: true
 
 jobs:
   deploy:
-    name: "Deploy Release"
+    name: "Deploy Production"
     runs-on: ubuntu-20.04
     steps:
       -
@@ -41,6 +41,16 @@ jobs:
         run: |
           kubectl config use-context cluster-us-west-2
           helmfile --file infrastructure/kubernetes/cluster-us-west-2.yaml \
-            --state-values-set version="${{ steps.version.outputs.version }}" deps
+            --state-values-set version="${{ steps.version.outputs.version }}" \
+            --state-values-set releaseName="rocroofing-production" \
+            --state-values-set namespace="ocdhomes" \
+            --state-values-set irsa="rocroofing-prod-irsa" \
+            --state-values-set hostname="www.rocroofingfl.com" \
+            deps
           helmfile --file infrastructure/kubernetes/cluster-us-west-2.yaml \
-            --state-values-set version="${{ steps.version.outputs.version }}" apply
+            --state-values-set version="${{ steps.version.outputs.version }}" \
+            --state-values-set releaseName="rocroofing-production" \
+            --state-values-set namespace="ocdhomes" \
+            --state-values-set irsa="rocroofing-prod-irsa" \
+            --state-values-set hostname="www.rocroofingfl.com" \
+            apply
