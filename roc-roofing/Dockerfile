@@ -16,7 +16,7 @@ COPY --from=FRONTEND_DEPENDENCY_STAGE /src/node_modules/ /src/node_modules/
 WORKDIR /src
 RUN npm run build
 
-FROM node:18.7.0-alpine3.15
+FROM arm64v8/node:18.17.1-buster
 ADD ./webapp/ /src/
 COPY --from=WEBAPP_DEPENDENCY_STAGE /src/package.json /src/package.json
 COPY --from=WEBAPP_DEPENDENCY_STAGE /src/node_modules/ /src/node_modules/
